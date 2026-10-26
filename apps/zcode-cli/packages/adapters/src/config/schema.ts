@@ -49,6 +49,10 @@ const mcpServerBaseSchema = {
   protocolVersion: z.enum(["auto", "legacy", "2026-07-28"]).optional(),
   enabled: z.boolean().optional(),
   timeoutMs: positiveNumberSchema.optional(),
+  // The adapter and pool already honor `isolation` (pool.ts reuses one connection across
+  // sessions only when the server declares "workspace"); the file config entry was missing
+  // it, so the strict schema rejected the whole server object.
+  isolation: z.enum(["session", "workspace"]).optional(),
 };
 
 const mcpOAuthSchema = z.union([

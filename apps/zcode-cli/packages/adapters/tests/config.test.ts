@@ -14,6 +14,36 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 describe("config adapters", () => {
+  it("accepts mcp server isolation and preserves it for the connection pool", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "zcode-config-mcp-isolation-"));
+    const configPath = join(dir, "config.json");
+
+    try {
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          mcp: {
+            servers: {
+              dbhub: {
+                type: "stdio",
+                command: "node",
+                args: ["dbhub.js"],
+                isolation: "workspace",
+              },
+            },
+          },
+        }),
+      );
+
+      const loaded = loadFileConfig(configPath);
+
+      expect(loaded.diagnostics).toEqual([]);
+      expect(loaded.config.mcp?.servers?.dbhub).toMatchObject({ isolation: "workspace" });
+    } finally {
+      await rm(dir, { force: true, recursive: true });
+    }
+  });
+
   it("migrates the legacy official CUA plugin id to the canonical id", async () => {
     const dir = await mkdtemp(join(tmpdir(), "zcode-config-cua-identity-"));
     const configPath = join(dir, "config.json");
